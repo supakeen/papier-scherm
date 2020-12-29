@@ -23,7 +23,7 @@ Button2 btn2(BUTTON_2);
 
 GxEPD2_BW<GxEPD2_213_B73, GxEPD2_213_B73::HEIGHT> display(GxEPD2_213_B73(/*CS=5*/ 5, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4)); // GDEH0213B73
 
-const char HelloWorld[] = "Hello World!";
+const char HelloWorld[] = "Hello, RevSpace!";
 
 void helloWorld()
 {
