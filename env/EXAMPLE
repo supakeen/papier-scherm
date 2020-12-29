@@ -1,0 +1,35 @@
+[data_test_wifi]
+ssid = "example"
+password = "example"
+
+build_flags =
+  '-DWIFI_SSID=${data_test_wifi.ssid}'
+  '-DWIFI_PASSWORD=${data_test_wifi.password}'
+
+[data_test_ota]
+hostname = "example.local"
+password = "example"
+
+build_flags =
+  '-DOTA_HOSTNAME=${data_test_ota.hostname}'
+  '-DOTA_PASSWORD=${data_test_ota.password}'
+
+[env:test-serial]
+upload_protocol = esptool
+
+build_flags = 
+  ${env.build_flags}
+  ${data_test_wifi.build_flags}
+  ${data_test_ota.build_flags}
+
+[env:test-ota]
+upload_protocol = espota
+upload_port = ${data_test_ota.hostname}
+upload_flags =
+    --port=3232
+    --auth=${data_test_ota.password}
+
+build_flags = 
+  ${env.build_flags}
+  ${data_test_wifi.build_flags}
+  ${data_test_ota.build_flags}
