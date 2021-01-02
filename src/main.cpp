@@ -25,8 +25,11 @@ MQTTClient mqtt;
 
 GxEPD2_BW<GxEPD2_213_B73, GxEPD2_213_B73::HEIGHT> display(GxEPD2_213_B73(/*CS=5*/ 5, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4)); // GDEH0213B73
 
+/* Keep track of state for each 'sensor' and then 'room:value' mapping so we
+ * can render from that. */
 std::map<String, std::map<String, String>> state;
 
+/* Small helper function if you want to figure out what is being received. */
 void dump_state() {
   for(auto sensor: state) {
       Serial.print(sensor.first + " ");
@@ -39,6 +42,7 @@ void dump_state() {
   }
 }
 
+/* Draw the current global state to the display. */
 void draw_state() {
     display.setFont(&FreeSansBold9pt7b);
     display.setTextColor(GxEPD_BLACK);
@@ -65,16 +69,15 @@ void draw_state() {
     display.nextPage();
 }
 
+/* Setup the display, rotate it correctly. */
 void setup_display() {
     display.init();
     display.setRotation(0);
 
     display.setFullWindow();
-    display.firstPage();
-    display.fillScreen(GxEPD_WHITE);
-    display.nextPage();
 }
 
+/* Connect to WiFi */
 void setup_wifi() {
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
@@ -84,6 +87,8 @@ void setup_wifi() {
 void loop_wifi() {
 }
 
+/* When a new MQTT message is received it is parsed and then written to the
+ * global state. */
 void callback_mqtt(String &topic, String &payload) {
     struct line_protocol message;
 
@@ -93,6 +98,10 @@ void callback_mqtt(String &topic, String &payload) {
 
     state[message.measurement][message.tags["room"]] = message.fields["value"];
 }
+
+/* Connect to the appropriate MQTT server and setup subscriptions to topics,
+ * note that messages on these topics should be in the InfluxDB Line Protocol
+ * format. */
 
 void setup_mqtt() {
     static WiFiClient wificlient;
@@ -109,6 +118,7 @@ void loop_mqtt() {
     mqtt.loop();
 }
 
+/* Call all of our setups and ready the Serial output for use. */
 void setup() {
     Serial.begin(115200);
 
@@ -121,7 +131,7 @@ void loop() {
     loop_wifi();
     loop_mqtt();
 
-    dump_state();
-
-    every(10000) draw_state();
+    // Refresh the screen every 5 minutes, epaper clearing has an annoying
+    // flashing animation and we don't want to redraw too often.
+    every(300000) draw_state();
 };
