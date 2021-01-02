@@ -44,6 +44,8 @@ void dump_state() {
 
 /* Draw the current global state to the display. */
 void draw_state() {
+    dump_state();
+
     display.setFont(&FreeSansBold9pt7b);
     display.setTextColor(GxEPD_BLACK);
     display.setTextSize(0.75);
@@ -131,7 +133,7 @@ void loop() {
     loop_wifi();
     loop_mqtt();
 
-    // Refresh the screen every 5 minutes, epaper clearing has an annoying
+    // Refresh the screen every 3 minutes, epaper clearing has an annoying
     // flashing animation and we don't want to redraw too often.
-    every(300000) draw_state();
+    every(180000) draw_state();
 };
