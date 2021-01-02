@@ -16,7 +16,7 @@
 
 #include "setting.h"
 
-#define every(t) for (static uint16_t _lasttime; (uint16_t)((uint16_t) millis() - _lasttime) >= (t); _lasttime = millis())
+#define every(t) for (static uint32_t _lasttime; (uint32_t)((uint32_t) millis() - _lasttime) >= (t); _lasttime = millis())
 
 #define MAX_DISPLAY_BUFFER_SIZE 800 
 #define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
