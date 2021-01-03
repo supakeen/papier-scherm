@@ -98,6 +98,10 @@ void callback_mqtt(String &topic, String &payload) {
         return;
     }
 
+    if(line_protocol_validate(message, { "room" }, { "value" })) {
+        return;
+    }
+
     state[message.measurement][message.tags["room"]] = message.fields["value"];
 }
 
