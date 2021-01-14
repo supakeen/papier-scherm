@@ -42,13 +42,15 @@ void dump_state() {
   }
 }
 
-void draw_center_align(String text, int yy, int offset = 0) {
+void draw_center_align(String text, int yy) {
     int16_t x, y;
     uint16_t w, h;
 
     display.getTextBounds(text, 0, yy, &x, &y, &w, &h);
 
-    display.setCursor((display.width() - w) / 2 - offset, yy);
+    Serial.println(x);
+
+    display.setCursor((display.width() - w) / 2 - x, yy);
     display.print(text);
 }
 
@@ -68,9 +70,9 @@ void draw_state() {
 
     display.setFont(&FreeSans24pt7b);
     if(!state.count("temperature") || !state["temperature"].count("bedroom")) {
-        draw_center_align("-", 75, 5);
+        draw_center_align("-", 75);
     } else {
-        draw_center_align(String(state["temperature"]["bedroom"].toFloat(), 1), 75, 5);
+        draw_center_align(String(state["temperature"]["bedroom"].toFloat(), 1), 75);
     }
 
     display.setFont(&FreeSansBold9pt7b);
@@ -78,9 +80,9 @@ void draw_state() {
 
     display.setFont(&FreeSans24pt7b);
     if(!state.count("temperature") || !state["temperature"].count("average")) {
-        draw_center_align("-", 153 , 5);
+        draw_center_align("-", 153);
     } else {
-        draw_center_align(String(state["temperature"]["average"].toFloat(), 1), 153, 5);
+        draw_center_align(String(state["temperature"]["average"].toFloat(), 1), 153);
     }
 
     display.setFont(&FreeSansBold9pt7b);
@@ -88,9 +90,9 @@ void draw_state() {
 
     display.setFont(&FreeSans24pt7b);
     if(!state.count("temperature") || !state["temperature"].count("external-6215")) {
-        draw_center_align("-", 231 , 5);
+        draw_center_align("-", 231);
     } else {
-        draw_center_align(String(state["temperature"]["external-6215"].toFloat(), 1), 231, 5);
+        draw_center_align(String(state["temperature"]["external-6215"].toFloat(), 1), 231);
     }
     display.nextPage();
 }
@@ -181,5 +183,6 @@ void loop() {
 
     // Refresh the screen every 3 minutes, epaper clearing has an annoying
     // flashing animation and we don't want to redraw too often.
-    every(15 * 60000) draw_state();
+    // every(15 * 60000) draw_state();
+    every(10000) draw_state();
 };
