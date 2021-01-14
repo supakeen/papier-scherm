@@ -12,6 +12,7 @@
 #include <map>
 
 #include <Fonts/FreeSansBold9pt7b.h>
+#include <Fonts/FreeSans24pt7b.h>
 #include "FreeSans7pt7b.h"
 
 #include "setting.h"
@@ -42,11 +43,19 @@ void dump_state() {
   }
 }
 
+void draw_center_align(String text, int yy) {
+    int16_t x, y;
+    uint16_t w, h;
+
+    display.getTextBounds(text, 0, yy, &x, &y, &w, &h);
+    display.setCursor((display.width() - w) / 2, yy);
+    display.print(text);
+}
+
 /* Draw the current global state to the display. */
 void draw_state() {
     dump_state();
 
-    display.setFont(&FreeSansBold9pt7b);
     display.setTextColor(GxEPD_BLACK);
     display.setTextSize(0.75);
     display.setFullWindow();
@@ -54,20 +63,39 @@ void draw_state() {
     display.firstPage();
     display.fillScreen(GxEPD_WHITE);
 
-    display.setCursor(0, 12);
+    display.setFont(&FreeSansBold9pt7b);
+    draw_center_align("Inside", 27);
 
-    display.print("Temperatures");
-
-    display.setFont(&FreeSans7pt7b);
-
-    int i = 30;
-
-    for(auto room: state["temperature"]) {
-      display.setCursor(0, i);
-      display.print(room.first + " " + String(room.second.toFloat(), 1));
-      i += 12;
+    display.setFont(&FreeSans24pt7b);
+    if(!state.count("temperature") || !state["temperature"].count("bedroom")) {
+        draw_center_align("-", 75);
+    } else {
+        draw_center_align(String(state["temperature"]["bedroom"].toFloat(), 1), 75);
     }
 
+    /* Possible other display value, not used for now.
+    display.setCursor(25, 105);
+    display.setFont(&FreeSansBold9pt7b);
+    display.print("Outside");
+
+    display.setCursor(15, 153);
+    display.setFont(&FreeSans24pt7b);
+    if(!state.count("temperature") || !state["temperature"].count("external-6215")) {
+        display.print("-");
+    } else {
+        display.print(String(state["temperature"]["external-6215"].toFloat(), 1));
+    }
+    */
+
+    display.setFont(&FreeSansBold9pt7b);
+    draw_center_align("Outside", 183);
+
+    display.setFont(&FreeSans24pt7b);
+    if(!state.count("temperature") || !state["temperature"].count("external-6215")) {
+        draw_center_align("-", 231);
+    } else {
+        draw_center_align(String(state["temperature"]["external-6215"].toFloat(), 1), 231);
+    }
     display.nextPage();
 }
 
@@ -99,6 +127,7 @@ void callback_mqtt(String &topic, String &payload) {
     }
 
     if(line_protocol_validate(message, { "room" }, { "value" })) {
+        Serial.println("did not validate");
         return;
     }
 
@@ -118,6 +147,8 @@ void setup_mqtt() {
 
     mqtt.subscribe("/sensor/temperature");
     mqtt.subscribe("/esp8266/temperature");
+    mqtt.subscribe("/external/weather-monitoring");
+    mqtt.subscribe("/external/time-monotoring/hhmm");
 }
 
 void loop_mqtt() {
@@ -139,5 +170,5 @@ void loop() {
 
     // Refresh the screen every 3 minutes, epaper clearing has an annoying
     // flashing animation and we don't want to redraw too often.
-    every(180000) draw_state();
+    every(10000) draw_state();
 };
