@@ -4,6 +4,7 @@
 #include <WiFi.h>
 #include <Wire.h>
 #include <MQTT.h>
+#include <Button2.h>
 
 #include <GxEPD2_BW.h>
 
@@ -22,8 +23,8 @@
 #define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
 
 MQTTClient mqtt;
-
 GxEPD2_BW<GxEPD2_213_B73, GxEPD2_213_B73::HEIGHT> display(GxEPD2_213_B73(/*CS=5*/ 5, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4)); // GDEH0213B73
+Button2 btn1(BUTTON_1);
 
 /* Keep track of state for each 'sensor' and then 'room:value' mapping so we
  * can render from that. */
@@ -48,16 +49,12 @@ void draw_center_align(String text, int yy) {
 
     display.getTextBounds(text, 0, yy, &x, &y, &w, &h);
 
-    Serial.println(x);
-
     display.setCursor((display.width() - w) / 2 - x, yy);
     display.print(text);
 }
 
 /* Draw the current global state to the display. */
 void draw_state() {
-    dump_state();
-
     display.setTextColor(GxEPD_BLACK);
     display.setTextSize(0.75);
     display.setFullWindow();
@@ -168,6 +165,16 @@ void loop_mqtt() {
     mqtt.loop();
 }
 
+void setup_button() {
+    btn1.setPressedHandler([](Button2 &b) {
+        draw_state();
+    });
+}
+
+void loop_button() {
+    btn1.loop();
+}
+
 /* Call all of our setups and ready the Serial output for use. */
 void setup() {
     Serial.begin(115200);
@@ -175,11 +182,13 @@ void setup() {
     setup_display();
     setup_wifi();
     setup_mqtt();
+    setup_button();
 }
 
 void loop() {
     loop_wifi();
     loop_mqtt();
+    loop_button();
 
     // Refresh the screen every 3 minutes, epaper clearing has an annoying
     // flashing animation and we don't want to redraw too often.

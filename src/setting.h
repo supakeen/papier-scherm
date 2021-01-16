@@ -5,3 +5,5 @@
 #ifndef WIFI_PASSWORD
 #define WIFI_PASSWORD "test"
 #endif
+
+#define BUTTON_1 39
