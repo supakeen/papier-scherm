@@ -192,5 +192,5 @@ void loop() {
 
     // Refresh the screen every 3 minutes, epaper clearing has an annoying
     // flashing animation and we don't want to redraw too often.
-    every(15 * 60000) draw_state();
+    every(15 * 1000) draw_state();
 };
