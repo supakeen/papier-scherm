@@ -1,3 +1,7 @@
+#ifndef FIRMWARE_NAME
+#define FIRMWARE_NAME "test"
+#endif
+
 #ifndef ROOM_NAME
 #define ROOM_NAME "test"
 #endif

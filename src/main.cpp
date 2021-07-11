@@ -104,8 +104,9 @@ void setup_display() {
 
 /* Connect to WiFi */
 void setup_wifi() {
-    WiFi.setHostname((String("PaperScreen-") + String(ROOM_NAME)).c_str());
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    WiFi.setHostname((String(ROOM_NAME) + String(FIRMWARE_NAME)).c_str());
 
     while (WiFi.status() != WL_CONNECTED) delay(500);
 }
