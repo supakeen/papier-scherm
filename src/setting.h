@@ -1,3 +1,11 @@
+#ifndef ROOM_NAME
+#define ROOM_NAME "test"
+#endif
+
+#ifndef OUTSIDE_NAME
+#define OUTSIDE_NAME "test"
+#endif
+
 #ifndef WIFI_SSID
 #define WIFI_SSID "test"
 #endif

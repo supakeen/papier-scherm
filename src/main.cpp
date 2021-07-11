@@ -66,10 +66,10 @@ void draw_state() {
     draw_center_align("Inside", 27);
 
     display.setFont(&FreeSans24pt7b);
-    if(!state.count("temperature") || !state["temperature"].count("bedroom")) {
+    if(!state.count("temperature") || !state["temperature"].count(ROOM_NAME)) {
         draw_center_align("-", 75);
     } else {
-        draw_center_align(String(state["temperature"]["bedroom"].toFloat(), 1), 75);
+        draw_center_align(String(state["temperature"][ROOM_NAME].toFloat(), 1), 75);
     }
 
     display.setFont(&FreeSansBold9pt7b);
@@ -86,10 +86,10 @@ void draw_state() {
     draw_center_align("Outside", 183);
 
     display.setFont(&FreeSans24pt7b);
-    if(!state.count("temperature") || !state["temperature"].count("external-6215")) {
+    if(!state.count("temperature") || !state["temperature"].count(OUTSIDE_NAME)) {
         draw_center_align("-", 231);
     } else {
-        draw_center_align(String(state["temperature"]["external-6215"].toFloat(), 1), 231);
+        draw_center_align(String(state["temperature"][OUTSIDE_NAME].toFloat(), 1), 231);
     }
     display.nextPage();
 }
@@ -104,6 +104,7 @@ void setup_display() {
 
 /* Connect to WiFi */
 void setup_wifi() {
+    WiFi.setHostname((String("PaperScreen-") + String(ROOM_NAME)).c_str());
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
     while (WiFi.status() != WL_CONNECTED) delay(500);
@@ -155,10 +156,18 @@ void setup_mqtt() {
 
     while(!mqtt.connect("")) delay(500);
 
+    String hostname = WiFi.getHostname();
+    String ip = WiFi.localIP().toString();
+
+    String subject = String("/debug/hello");
+    String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname);
+
+    mqtt.publish(subject, data, true, 1);
+
     mqtt.subscribe("/sensor/temperature");
     mqtt.subscribe("/esp8266/temperature");
     mqtt.subscribe("/external/weather-monitoring");
-    mqtt.subscribe("/external/time-monotoring/hhmm");
+    mqtt.subscribe("/external/time-monitoring/hhmm");
 }
 
 void loop_mqtt() {
@@ -183,6 +192,8 @@ void setup() {
     setup_wifi();
     setup_mqtt();
     setup_button();
+
+    draw_state();
 }
 
 void loop() {
@@ -192,5 +203,5 @@ void loop() {
 
     // Refresh the screen every 3 minutes, epaper clearing has an annoying
     // flashing animation and we don't want to redraw too often.
-    every(15 * 1000) draw_state();
+    every(300 * 1000) draw_state();
 };
