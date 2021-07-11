@@ -106,7 +106,7 @@ void setup_display() {
 void setup_wifi() {
     WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    WiFi.setHostname((String(ROOM_NAME) + String(FIRMWARE_NAME)).c_str());
+    WiFi.setHostname((String(ROOM_NAME) + String("-") + String(FIRMWARE_NAME)).c_str());
 
     while (WiFi.status() != WL_CONNECTED) delay(500);
 }

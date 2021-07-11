@@ -1,5 +1,5 @@
 #ifndef FIRMWARE_NAME
-#define FIRMWARE_NAME "test"
+#define FIRMWARE_NAME "PaperScreen"
 #endif
 
 #ifndef ROOM_NAME
@@ -7,7 +7,7 @@
 #endif
 
 #ifndef OUTSIDE_NAME
-#define OUTSIDE_NAME "test"
+#define OUTSIDE_NAME "external-6215"
 #endif
 
 #ifndef WIFI_SSID
