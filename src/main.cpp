@@ -17,6 +17,14 @@
 
 #include "setting.h"
 
+#define Sprintf(f, ...) ({ char* s; asprintf(&s, f, __VA_ARGS__); String r = s; free(s); r; })
+
+#ifdef ESP32
+    #define ESPMAC (Sprintf("%06" PRIx64, ESP.getEfuseMac() >> 24))
+#elif ESP8266
+    #define ESPMAC (Sprintf("%06" PRIx32, ESP.getChipId()))
+#endif
+
 #define every(t) for (static uint32_t _lasttime; (uint32_t)((uint32_t) millis() - _lasttime) >= (t); _lasttime = millis())
 
 #define MAX_DISPLAY_BUFFER_SIZE 800 
@@ -161,7 +169,7 @@ void setup_mqtt() {
     String ip = WiFi.localIP().toString();
 
     String subject = String("/debug/hello");
-    String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname);
+    String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname) + String(",mac=") + String(ESPMAC);
 
     mqtt.publish(subject, data, true, 1);
 
