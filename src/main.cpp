@@ -107,7 +107,7 @@ void say_hello() {
     String hostname = WiFi.getHostname();
     String ip = WiFi.localIP().toString();
 
-    String subject = String("/debug/hello/") + String(ROOM_NAME);
+    String subject = String("/debug/hello/") + String(ROOM_NAME) + String("/") + String(FIRMWARE_NAME);
     String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname) + String(",mac=") + String(ESPMAC);
 
     mqtt.publish(subject, data, true, 1);
@@ -118,7 +118,7 @@ void say_ping() {
     String hostname = WiFi.getHostname();
     String ip = WiFi.localIP().toString();
 
-    String subject = String("/debug/ping/") + String(ROOM_NAME);
+    String subject = String("/debug/ping/") + String(ROOM_NAME) + String("/") + String(FIRMWARE_NAME);
     String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname) + String(",mac=") + String(ESPMAC);
 
     mqtt.publish(subject, data);
