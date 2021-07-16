@@ -102,6 +102,28 @@ void draw_state() {
     display.nextPage();
 }
 
+/* Say hello to our MQTT server. */
+void say_hello() {
+    String hostname = WiFi.getHostname();
+    String ip = WiFi.localIP().toString();
+
+    String subject = String("/debug/hello/") + String(ROOM_NAME);
+    String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname) + String(",mac=") + String(ESPMAC);
+
+    mqtt.publish(subject, data, true, 1);
+}
+
+/* Say ping to our MQTT server. */
+void say_ping() {
+    String hostname = WiFi.getHostname();
+    String ip = WiFi.localIP().toString();
+
+    String subject = String("/debug/ping/") + String(ROOM_NAME);
+    String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname) + String(",mac=") + String(ESPMAC);
+
+    mqtt.publish(subject, data);
+}
+
 /* Setup the display, rotate it correctly. */
 void setup_display() {
     display.init();
@@ -165,13 +187,7 @@ void setup_mqtt() {
 
     while(!mqtt.connect("")) delay(500);
 
-    String hostname = WiFi.getHostname();
-    String ip = WiFi.localIP().toString();
-
-    String subject = String("/debug/hello/") + String(ROOM_NAME);
-    String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname) + String(",mac=") + String(ESPMAC);
-
-    mqtt.publish(subject, data, true, 1);
+    say_hello();
 
     mqtt.subscribe("/sensor/temperature");
     mqtt.subscribe("/esp8266/temperature");
@@ -213,4 +229,5 @@ void loop() {
     // Refresh the screen every 3 minutes, epaper clearing has an annoying
     // flashing animation and we don't want to redraw too often.
     every(300 * 1000) draw_state();
+    every(60 * 1000) say_ping();
 };
