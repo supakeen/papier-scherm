@@ -144,7 +144,7 @@ void callback_mqtt(String &topic, String &payload) {
         size_t count = 0;
 
         for(auto room: state["temperature"]) {
-            if(room.first == "external-6215") continue;
+            if(String(room.first).startsWith("external-6215")) continue;
 
             total += String(room.second).toFloat();
             count++;
