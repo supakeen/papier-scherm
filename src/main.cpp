@@ -104,24 +104,44 @@ void draw_state() {
 
 /* Say hello to our MQTT server. */
 void say_hello() {
+    return;
+
+    Serial.println("Sending HELLO.");
+
     String hostname = WiFi.getHostname();
     String ip = WiFi.localIP().toString();
 
     String subject = String("/debug/hello/") + String(ROOM_NAME) + String("/") + String(FIRMWARE_NAME);
     String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname) + String(",mac=") + String(ESPMAC);
 
+    Serial.print(subject);
+    Serial.print(":");
+    Serial.println(data);
+
     mqtt.publish(subject, data, true, 1);
+
+    Serial.println("Sent HELLO.");
 }
 
 /* Say ping to our MQTT server. */
 void say_ping() {
+    return;
+
+    Serial.println("Sending PING.");
+
     String hostname = WiFi.getHostname();
     String ip = WiFi.localIP().toString();
 
     String subject = String("/debug/ping/") + String(ROOM_NAME) + String("/") + String(FIRMWARE_NAME);
     String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname) + String(",mac=") + String(ESPMAC);
 
+    Serial.print(subject);
+    Serial.print(":");
+    Serial.println(data);
+
     mqtt.publish(subject, data);
+
+    Serial.println("Sent PING.");
 }
 
 /* Setup the display, rotate it correctly. */
@@ -148,6 +168,9 @@ void loop_wifi() {
  * global state. */
 void callback_mqtt(String &topic, String &payload) {
     struct line_protocol message;
+
+    Serial.print("Received MQTT: ");
+    Serial.println(payload);
 
     if(line_protocol_parse(message, payload)) {
         return;
@@ -185,14 +208,17 @@ void setup_mqtt() {
     mqtt.begin("192.168.1.10", 1883, wificlient);
     mqtt.onMessage(callback_mqtt);
 
+    Serial.println("Connecting MQTT.");
     while(!mqtt.connect("")) delay(500);
-
-    say_hello();
+    Serial.println("MQTT connected.");
 
     mqtt.subscribe("/sensor/temperature");
     mqtt.subscribe("/esp8266/temperature");
     mqtt.subscribe("/external/weather-monitoring");
-    mqtt.subscribe("/external/time-monitoring/hhmm");
+
+    say_hello();
+
+    Serial.println("Said hello.");
 }
 
 void loop_mqtt() {
