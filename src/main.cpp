@@ -1,3 +1,16 @@
+/* This is the `PapierScherm` firmware, meant to run on the LILYGO® TTGO T5
+V2.3.1. Check the back of your PCB to confirm but it's the version with side
+buttons. Not bottom buttons.
+
+The firmware assumes you have an MQTT server running that publishes numbers in
+the `LineProtocol` format as used by InfluxDB. It will listen to messages and
+match all that have a `room=$room` tag, where the list of rooms is defined in
+the settings.
+
+It will then show the current room temperature (as set in settings) up top, then
+the average temperature, and the outside temperature. The average temperature
+does not include the room set as `outside`. */
+
 #include <Arduino.h>
 
 #include <SPI.h>
@@ -20,15 +33,18 @@
 #define Sprintf(f, ...) ({ char* s; asprintf(&s, f, __VA_ARGS__); String r = s; free(s); r; })
 
 #ifdef ESP32
-    #define ESPMAC (Sprintf("%06" PRIx64, ESP.getEfuseMac() >> 24))
+    #define ESPMAC (Sprintf("%06" PRIx64, ESP.getEfuseMac() >> 24)).c_str()
 #elif ESP8266
-    #define ESPMAC (Sprintf("%06" PRIx32, ESP.getChipId()))
+    #define ESPMAC (Sprintf("%06" PRIx32, ESP.getChipId())).c_str()
 #endif
+
+#define HOST_NAME ROOM_NAME "-" FIRMWARE_NAME
 
 #define every(t) for (static uint32_t _lasttime; (uint32_t)((uint32_t) millis() - _lasttime) >= (t); _lasttime = millis())
 
 #define MAX_DISPLAY_BUFFER_SIZE 800 
 #define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
+
 
 MQTTClient mqtt;
 GxEPD2_BW<GxEPD2_213_B73, GxEPD2_213_B73::HEIGHT> display(GxEPD2_213_B73(/*CS=5*/ 5, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4)); // GDEH0213B73
@@ -59,6 +75,12 @@ void draw_center_align(String text, int yy) {
 
     display.setCursor((display.width() - w) / 2 - x, yy);
     display.print(text);
+}
+
+/* Draw the 'loading' bar at the top of the screen to show how long until the
+next refresh. */
+
+void draw_load() {
 }
 
 /* Draw the current global state to the display. */
@@ -106,9 +128,9 @@ void draw_state() {
 void say_hello() {
     return;
 
+    /*
     Serial.println("Sending HELLO.");
 
-    String hostname = WiFi.getHostname();
     String ip = WiFi.localIP().toString();
 
     String subject = String("/debug/hello/") + String(ROOM_NAME) + String("/") + String(FIRMWARE_NAME);
@@ -121,27 +143,34 @@ void say_hello() {
     mqtt.publish(subject, data, true, 1);
 
     Serial.println("Sent HELLO.");
+    */
 }
 
 /* Say ping to our MQTT server. */
 void say_ping() {
-    return;
+    char topic[128] = { 0 };
+    char payload[128] = { 0 };
 
-    Serial.println("Sending PING.");
+    snprintf(
+        topic,
+        sizeof(topic),
+        "/debug/ping/%s/%s",
+        ROOM_NAME,
+        FIRMWARE_NAME
+    );
 
-    String hostname = WiFi.getHostname();
-    String ip = WiFi.localIP().toString();
+    snprintf(
+        payload,
+        sizeof(payload),
+        "room=%s firmware=%s,ip=%s,hostname=%s,mac=%s",
+        ROOM_NAME,
+        FIRMWARE_NAME,
+        WiFi.localIP().toString().c_str(),
+        HOST_NAME,
+        ESPMAC
+    );
 
-    String subject = String("/debug/ping/") + String(ROOM_NAME) + String("/") + String(FIRMWARE_NAME);
-    String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname) + String(",mac=") + String(ESPMAC);
-
-    Serial.print(subject);
-    Serial.print(":");
-    Serial.println(data);
-
-    mqtt.publish(subject, data);
-
-    Serial.println("Sent PING.");
+    mqtt.publish(topic, payload);
 }
 
 /* Setup the display, rotate it correctly. */
@@ -156,12 +185,21 @@ void setup_display() {
 void setup_wifi() {
     WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    WiFi.setHostname((String(ROOM_NAME) + String("-") + String(FIRMWARE_NAME)).c_str());
+    WiFi.setHostname(HOST_NAME);
 
+    Serial.println("setup_wifi: connecting");
     while (WiFi.status() != WL_CONNECTED) delay(500);
 }
 
 void loop_wifi() {
+    if ((WiFi.status() != WL_CONNECTED)) {
+        Serial.println("loop_wifi: reconnecting");
+
+        WiFi.disconnect();
+        WiFi.reconnect();
+
+        while (WiFi.status() != WL_CONNECTED) delay(500);
+    }
 }
 
 /* When a new MQTT message is received it is parsed and then written to the
@@ -169,8 +207,11 @@ void loop_wifi() {
 void callback_mqtt(String &topic, String &payload) {
     struct line_protocol message;
 
-    Serial.print("Received MQTT: ");
-    Serial.println(payload);
+    if(strstr("/control/reboot/" ROOM_NAME "/" ROOM_NAME "-" FIRMWARE_NAME, topic.c_str()) != NULL) {
+        Serial.println("callback_mqtt: rebooting");
+        ESP.restart();
+        return;
+    }
 
     if(line_protocol_parse(message, payload)) {
         return;
@@ -179,6 +220,9 @@ void callback_mqtt(String &topic, String &payload) {
     if(line_protocol_validate(message, { "room" }, { "value" })) {
         return;
     }
+
+    if(message.measurement != "temperature") return;
+    if(strstr(ROOMS, message.tags["room"].c_str()) == NULL) return;
 
     state[message.measurement][message.tags["room"]] = message.fields["value"];
 
@@ -200,29 +244,35 @@ void callback_mqtt(String &topic, String &payload) {
 }
 
 /* Connect to the appropriate MQTT server and setup subscriptions to topics,
- * note that messages on these topics should be in the InfluxDB Line Protocol
- * format. */
-
+note that messages on these topics should be in the InfluxDB Line Protocol
+format. */
 void setup_mqtt() {
     static WiFiClient wificlient;
     mqtt.begin("192.168.1.10", 1883, wificlient);
     mqtt.onMessage(callback_mqtt);
 
-    Serial.println("Connecting MQTT.");
-    while(!mqtt.connect("")) delay(500);
-    Serial.println("MQTT connected.");
+    Serial.println("setup_mqtt: connecting");
+    while(!mqtt.connect(ROOM_NAME "-" FIRMWARE_NAME)) delay(500);
 
+    mqtt.subscribe("/control/reboot/" ROOM_NAME "/" HOST_NAME);
     mqtt.subscribe("/sensor/temperature");
     mqtt.subscribe("/esp8266/temperature");
     mqtt.subscribe("/external/weather-monitoring");
 
-    say_hello();
-
-    Serial.println("Said hello.");
 }
 
 void loop_mqtt() {
     mqtt.loop();
+
+    if(!mqtt.connected()) {
+        Serial.println("loop_mqtt: connecting");
+
+        while(!mqtt.connect(HOST_NAME)) delay(500);
+
+        mqtt.subscribe("/sensor/temperature");
+        mqtt.subscribe("/esp8266/temperature");
+        mqtt.subscribe("/external/weather-monitoring");
+    }
 }
 
 void setup_button() {
@@ -255,5 +305,6 @@ void loop() {
     // Refresh the screen every 3 minutes, epaper clearing has an annoying
     // flashing animation and we don't want to redraw too often.
     every(300 * 1000) draw_state();
+    every(5 * 1000) draw_load();
     every(5 * 1000) say_ping();
 };
