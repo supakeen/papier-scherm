@@ -127,23 +127,6 @@ void draw_state() {
 /* Say hello to our MQTT server. */
 void say_hello() {
     return;
-
-    /*
-    Serial.println("Sending HELLO.");
-
-    String ip = WiFi.localIP().toString();
-
-    String subject = String("/debug/hello/") + String(ROOM_NAME) + String("/") + String(FIRMWARE_NAME);
-    String data = String("room=") + String(ROOM_NAME) + String(" ") + String("firmware=") + String("PaperScreen") + String(",ip=") + ip + String(",hostname=") + String(hostname) + String(",mac=") + String(ESPMAC);
-
-    Serial.print(subject);
-    Serial.print(":");
-    Serial.println(data);
-
-    mqtt.publish(subject, data, true, 1);
-
-    Serial.println("Sent HELLO.");
-    */
 }
 
 /* Say ping to our MQTT server. */
@@ -252,7 +235,7 @@ void setup_mqtt() {
     mqtt.onMessage(callback_mqtt);
 
     Serial.println("setup_mqtt: connecting");
-    while(!mqtt.connect(ROOM_NAME "-" FIRMWARE_NAME)) delay(500);
+    while(!mqtt.connect(HOST_NAME)) delay(500);
 
     mqtt.subscribe("/control/reboot/" ROOM_NAME "/" HOST_NAME);
     mqtt.subscribe("/sensor/temperature");
