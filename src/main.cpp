@@ -46,7 +46,7 @@ does not include the room set as `outside`. */
 #define MAX_HEIGHT(EPD) (EPD::HEIGHT <= MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8) ? EPD::HEIGHT : MAX_DISPLAY_BUFFER_SIZE / (EPD::WIDTH / 8))
 
 
-MQTTClient mqtt;
+MQTTClient mqtt(256);
 GxEPD2_BW<GxEPD2_213_B73, GxEPD2_213_B73::HEIGHT> display(GxEPD2_213_B73(/*CS=5*/ 5, /*DC=*/ 17, /*RST=*/ 16, /*BUSY=*/ 4)); // GDEH0213B73
 Button2 btn1(BUTTON_1);
 
@@ -183,11 +183,6 @@ void loop_wifi() {
  * global state. */
 void callback_mqtt(String &topic, String &payload) {
     struct line_protocol message;
-
-    Serial.print("callback_mqtt: ");
-    Serial.print(topic);
-    Serial.print(":");
-    Serial.println(payload);
 
     if(strstr("/control/reboot/" ROOM_NAME "/" ROOM_NAME "-" FIRMWARE_NAME, topic.c_str()) != NULL) {
         Serial.println("callback_mqtt: rebooting");
