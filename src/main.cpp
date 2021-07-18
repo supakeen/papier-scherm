@@ -77,12 +77,6 @@ void draw_center_align(String text, int yy) {
     display.print(text);
 }
 
-/* Draw the 'loading' bar at the top of the screen to show how long until the
-next refresh. */
-
-void draw_load() {
-}
-
 /* Draw the current global state to the display. */
 void draw_state() {
     display.setTextColor(GxEPD_BLACK);
@@ -190,6 +184,11 @@ void loop_wifi() {
 void callback_mqtt(String &topic, String &payload) {
     struct line_protocol message;
 
+    Serial.print("callback_mqtt: ");
+    Serial.print(topic);
+    Serial.print(":");
+    Serial.println(payload);
+
     if(strstr("/control/reboot/" ROOM_NAME "/" ROOM_NAME "-" FIRMWARE_NAME, topic.c_str()) != NULL) {
         Serial.println("callback_mqtt: rebooting");
         ESP.restart();
@@ -226,6 +225,15 @@ void callback_mqtt(String &topic, String &payload) {
     }
 }
 
+void connect_mqtt() {
+    while(!mqtt.connect(HOST_NAME)) delay(500);
+
+    mqtt.subscribe("/control/reboot/" ROOM_NAME "/" HOST_NAME);
+    mqtt.subscribe("/sensor/temperature");
+    mqtt.subscribe("/external/weather-monitoring");
+}
+
+
 /* Connect to the appropriate MQTT server and setup subscriptions to topics,
 note that messages on these topics should be in the InfluxDB Line Protocol
 format. */
@@ -235,13 +243,8 @@ void setup_mqtt() {
     mqtt.onMessage(callback_mqtt);
 
     Serial.println("setup_mqtt: connecting");
-    while(!mqtt.connect(HOST_NAME)) delay(500);
 
-    mqtt.subscribe("/control/reboot/" ROOM_NAME "/" HOST_NAME);
-    mqtt.subscribe("/sensor/temperature");
-    mqtt.subscribe("/esp8266/temperature");
-    mqtt.subscribe("/external/weather-monitoring");
-
+    connect_mqtt();
 }
 
 void loop_mqtt() {
@@ -250,11 +253,7 @@ void loop_mqtt() {
     if(!mqtt.connected()) {
         Serial.println("loop_mqtt: connecting");
 
-        while(!mqtt.connect(HOST_NAME)) delay(500);
-
-        mqtt.subscribe("/sensor/temperature");
-        mqtt.subscribe("/esp8266/temperature");
-        mqtt.subscribe("/external/weather-monitoring");
+        connect_mqtt();
     }
 }
 
@@ -288,6 +287,5 @@ void loop() {
     // Refresh the screen every 3 minutes, epaper clearing has an annoying
     // flashing animation and we don't want to redraw too often.
     every(300 * 1000) draw_state();
-    every(5 * 1000) draw_load();
     every(5 * 1000) say_ping();
 };
