@@ -208,7 +208,7 @@ void loop_wifi() {
 void callback_mqtt(String &topic, String &payload) {
     struct line_protocol message;
 
-    if(strstr("/control/reboot/" ROOM_NAME "/" ROOM_NAME "-" FIRMWARE_NAME, topic.c_str()) != NULL) {
+    if(strstr("/control/reboot/" ROOM_NAME "/" HOST_NAME, topic.c_str()) != NULL) {
         Serial.println("callback_mqtt: rebooting");
         ESP.restart();
         return;
