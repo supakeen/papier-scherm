@@ -145,7 +145,9 @@ void say_hello() {
         ESPMAC
     );
 
-    mqtt.publish(topic, payload, true, 0);
+    if(!mqtt.publish(topic, payload, true, 0)) {
+        Serial.println("say_hello: failed publishing message");
+    }
 }
 
 /* Say ping to our MQTT server. */
@@ -172,7 +174,9 @@ void say_ping() {
         ESPMAC
     );
 
-    mqtt.publish(topic, payload);
+    if(!mqtt.publish(topic, payload, false, 0)) {
+        Serial.println("say_ping: failed publishing message");
+    }
 }
 
 /* Setup the display, rotate it correctly. */
