@@ -54,7 +54,8 @@ Button2 btn1(BUTTON_1);
  * can render from that. */
 std::map<String, std::map<String, String>> state;
 
-/* Small helper function if you want to figure out what is being received. */
+/* Small helper function if you want to figure out what is being received and
+kept track of in the state map. */
 void dump_state() {
   for(auto sensor: state) {
       Serial.print(sensor.first + " ");
@@ -67,6 +68,8 @@ void dump_state() {
   }
 }
 
+/* Use the bounding box of some text plus display width to center align text
+in that area. */
 void draw_center_align(String text, int yy) {
     int16_t x, y;
     uint16_t w, h;
@@ -77,7 +80,7 @@ void draw_center_align(String text, int yy) {
     display.print(text);
 }
 
-/* Draw the current global state to the display. */
+/* Draw the current state map to the display. */
 void draw_state() {
     display.setTextColor(GxEPD_BLACK);
     display.setTextSize(0.75);
@@ -120,7 +123,29 @@ void draw_state() {
 
 /* Say hello to our MQTT server. */
 void say_hello() {
-    return;
+    char topic[128] = { 0 };
+    char payload[128] = { 0 };
+
+    snprintf(
+        topic,
+        sizeof(topic),
+        "/debug/hello/%s/%s",
+        ROOM_NAME,
+        FIRMWARE_NAME
+    );
+
+    snprintf(
+        payload,
+        sizeof(payload),
+        "room=%s firmware=%s,ip=%s,hostname=%s,mac=%s",
+        ROOM_NAME,
+        FIRMWARE_NAME,
+        WiFi.localIP().toString().c_str(),
+        HOST_NAME,
+        ESPMAC
+    );
+
+    mqtt.publish(topic, payload, true, 0);
 }
 
 /* Say ping to our MQTT server. */
@@ -154,7 +179,6 @@ void say_ping() {
 void setup_display() {
     display.init();
     display.setRotation(0);
-
     display.setFullWindow();
 }
 
@@ -226,6 +250,8 @@ void connect_mqtt() {
     mqtt.subscribe("/control/reboot/" ROOM_NAME "/" HOST_NAME);
     mqtt.subscribe("/sensor/temperature");
     mqtt.subscribe("/external/weather-monitoring");
+
+    say_hello();
 }
 
 
@@ -283,4 +309,4 @@ void loop() {
     // flashing animation and we don't want to redraw too often.
     every(300 * 1000) draw_state();
     every(5 * 1000) say_ping();
-};
+}
