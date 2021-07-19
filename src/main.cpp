@@ -82,6 +82,8 @@ void draw_center_align(String text, int yy) {
 
 /* Draw the current state map to the display. */
 void draw_state() {
+    Serial.println("draw_state: drawing state");
+
     display.setTextColor(GxEPD_BLACK);
     display.setTextSize(0.75);
     display.setFullWindow();
@@ -147,6 +149,8 @@ void say_hello() {
 
     if(!mqtt.publish(topic, payload, true, 0)) {
         Serial.println("say_hello: failed publishing message");
+    } else {
+        Serial.println("say_hello: said hello");
     }
 }
 
@@ -176,6 +180,8 @@ void say_ping() {
 
     if(!mqtt.publish(topic, payload, false, 0)) {
         Serial.println("say_ping: failed publishing message");
+    } else {
+        Serial.println("say_ping: sent ping");
     }
 }
 
@@ -192,13 +198,20 @@ void setup_wifi() {
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     WiFi.setHostname(HOST_NAME);
 
-    Serial.println("setup_wifi: connecting");
+    Serial.println(Sprintf("setup_wifi: connecting to %s", WIFI_SSID));
+
     while (WiFi.status() != WL_CONNECTED) delay(500);
 }
 
 void loop_wifi() {
     if ((WiFi.status() != WL_CONNECTED)) {
-        Serial.println("loop_wifi: reconnecting");
+
+        Serial.println(
+            Sprintf(
+                "loop_wifi: lost connection to %s, reconnecting",
+                WIFI_SSID
+            )
+        );
 
         WiFi.disconnect();
         WiFi.reconnect();
@@ -219,15 +232,41 @@ void callback_mqtt(String &topic, String &payload) {
     }
 
     if(line_protocol_parse(message, payload)) {
+        Serial.println(
+            Sprintf(
+                "callback_mqtt: received unparseable message on topic %s with data %s",
+                topic.c_str(),
+                payload.c_str()
+            )
+        );
+
         return;
     }
 
+    // Ensure that the line protocol in the message contains the `room` tag and
+    // `value` field. 
     if(line_protocol_validate(message, { "room" }, { "value" })) {
+        Serial.println(
+            Sprintf(
+                "callback_mqtt: received unvalidated message on topic %s with data %s",
+                topic.c_str(),
+                payload.c_str()
+            )
+        );
+
         return;
     }
 
     if(message.measurement != "temperature") return;
     if(strstr(ROOMS, message.tags["room"].c_str()) == NULL) return;
+
+    Serial.println(
+        Sprintf(
+            "callback_mqtt: message on topic %s with data %s",
+            topic.c_str(),
+            payload.c_str()
+        )
+    );
 
     state[message.measurement][message.tags["room"]] = message.fields["value"];
 
@@ -249,6 +288,10 @@ void callback_mqtt(String &topic, String &payload) {
 }
 
 void connect_mqtt() {
+    Serial.println(
+        Sprintf("connect_mqtt: connecting to %s:%d", MQTT_SERVER, MQTT_PORT)
+    );
+
     while(!mqtt.connect(HOST_NAME)) delay(500);
 
     mqtt.subscribe("/control/reboot/" ROOM_NAME "/" HOST_NAME);
@@ -264,10 +307,13 @@ note that messages on these topics should be in the InfluxDB Line Protocol
 format. */
 void setup_mqtt() {
     static WiFiClient wificlient;
-    mqtt.begin("192.168.1.10", 1883, wificlient);
-    mqtt.onMessage(callback_mqtt);
 
-    Serial.println("setup_mqtt: connecting");
+    Serial.println(
+        Sprintf("setup_mqtt: configuring with %s:%d", MQTT_SERVER, MQTT_PORT)
+    );
+
+    mqtt.begin(MQTT_SERVER, MQTT_PORT, wificlient);
+    mqtt.onMessage(callback_mqtt);
 
     connect_mqtt();
 }
@@ -276,7 +322,13 @@ void loop_mqtt() {
     mqtt.loop();
 
     if(!mqtt.connected()) {
-        Serial.println("loop_mqtt: connecting");
+        Serial.println(
+            Sprintf(
+                "loop_mqtt: lost connection to %s:%d, reconnecting",
+                MQTT_SERVER,
+                MQTT_PORT
+            )
+        );
 
         connect_mqtt();
     }
@@ -284,6 +336,8 @@ void loop_mqtt() {
 
 void setup_button() {
     btn1.setPressedHandler([](Button2 &b) {
+        Serial.println("button_callback: btn1 pressed");
+
         draw_state();
     });
 }

@@ -3,7 +3,7 @@
 #endif
 
 #ifndef ROOM_NAME
-#define ROOM_NAME "bedroom"
+#define ROOM_NAME "study"
 #endif
 
 #ifndef ROOMS
@@ -15,11 +15,19 @@
 #endif
 
 #ifndef WIFI_SSID
-#define WIFI_SSID "x"
+#define WIFI_SSID "test"
 #endif
 
 #ifndef WIFI_PASSWORD
-#define WIFI_PASSWORD "x"
+#define WIFI_PASSWORD "test"
+#endif
+
+#ifndef MQTT_SERVER
+#define MQTT_SERVER "192.168.1.10"
+#endif
+
+#ifndef MQTT_PORT
+#define MQTT_PORT 1883
 #endif
 
 #define BUTTON_1 39
