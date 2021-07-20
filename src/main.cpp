@@ -51,7 +51,7 @@ GxEPD2_BW<GxEPD2_213_B73, GxEPD2_213_B73::HEIGHT> display(GxEPD2_213_B73(/*CS=5*
 Button2 btn1(BUTTON_1);
 
 /* Keep track of state for each 'sensor' and then 'room:value' mapping so we
- * can render from that. */
+can render from that. */
 std::map<String, std::map<String, String>> state;
 
 /* Small helper function if you want to figure out what is being received and
@@ -221,7 +221,7 @@ void loop_wifi() {
 }
 
 /* When a new MQTT message is received it is parsed and then written to the
- * global state. */
+global state. */
 void callback_mqtt(String &topic, String &payload) {
     struct line_protocol message;
 
