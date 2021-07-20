@@ -350,6 +350,7 @@ void setup() {
     setup_display();
     setup_wifi();
     setup_mqtt();
+    setup_ota();
     setup_button();
 
     draw_state();
