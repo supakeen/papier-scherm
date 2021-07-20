@@ -362,8 +362,9 @@ void loop() {
     loop_ota();
     loop_button();
 
-    // Refresh the screen every 3 minutes, epaper clearing has an annoying
-    // flashing animation and we don't want to redraw too often.
+    // Refresh the screen every interval minutes, epaper clearing has an
+    // annoying flashing animation and we don't want to redraw too often until
+    // partial redraws are implemented.
     every(300 * 1000) draw_state();
     every(5 * 1000) say_ping();
 }
