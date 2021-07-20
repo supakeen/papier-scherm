@@ -12,6 +12,7 @@ the average temperature, and the outside temperature. The average temperature
 does not include the room set as `outside`. */
 
 #include <Arduino.h>
+#include <ArduinoOTA.h>
 
 #include <SPI.h>
 #include <WiFi.h>
@@ -332,6 +333,16 @@ void loop_button() {
     btn1.loop();
 }
 
+void setup_ota() {
+    ArduinoOTA.setHostname(HOST_NAME);
+    ArduinoOTA.setPassword(OTA_PASSWORD);
+    ArduinoOTA.begin();
+}
+
+void loop_ota() {
+    ArduinoOTA.handle();
+}
+
 /* Call all of our setups and ready the Serial output for use. */
 void setup() {
     Serial.begin(115200);
@@ -347,6 +358,7 @@ void setup() {
 void loop() {
     loop_wifi();
     loop_mqtt();
+    loop_ota();
     loop_button();
 
     // Refresh the screen every 3 minutes, epaper clearing has an annoying

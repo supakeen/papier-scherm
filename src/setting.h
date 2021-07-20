@@ -30,4 +30,8 @@
 #define MQTT_PORT 1883
 #endif
 
+#ifndef OTA_PASSWORD
+#define OTA_PASSWORD "abcd"
+#endif
+
 #define BUTTON_1 39
