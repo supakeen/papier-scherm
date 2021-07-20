@@ -125,20 +125,13 @@ void draw_state() {
 
 /* Say hello to our MQTT server. */
 void say_hello() {
-    char topic[128] = { 0 };
-    char payload[128] = { 0 };
-
-    snprintf(
-        topic,
-        sizeof(topic),
+    String topic = Sprintf(
         "/debug/hello/%s/%s",
         ROOM_NAME,
         FIRMWARE_NAME
-    );
+    )
 
-    snprintf(
-        payload,
-        sizeof(payload),
+    String payload = Sprintf(
         "room=%s firmware=%s,ip=%s,hostname=%s,mac=%s",
         ROOM_NAME,
         FIRMWARE_NAME,
@@ -156,20 +149,13 @@ void say_hello() {
 
 /* Say ping to our MQTT server. */
 void say_ping() {
-    char topic[128] = { 0 };
-    char payload[128] = { 0 };
-
-    snprintf(
-        topic,
-        sizeof(topic),
+    String topic = Sprintf(,
         "/debug/ping/%s/%s",
         ROOM_NAME,
         FIRMWARE_NAME
     );
 
-    snprintf(
-        payload,
-        sizeof(payload),
+    String payload = Sprintf(
         "room=%s firmware=%s,ip=%s,hostname=%s,mac=%s",
         ROOM_NAME,
         FIRMWARE_NAME,
