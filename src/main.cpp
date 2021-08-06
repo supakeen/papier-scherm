@@ -187,7 +187,12 @@ void setup_wifi() {
 
     Serial.println(Sprintf("setup_wifi: connecting to %s", WIFI_SSID));
 
-    while (WiFi.status() != WL_CONNECTED) delay(500);
+    int cycles = 30;
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+
+        if(cycles-- <= 0) ESP.restart();
+    }
 }
 
 void loop_wifi() {
@@ -203,7 +208,12 @@ void loop_wifi() {
         WiFi.disconnect();
         WiFi.reconnect();
 
-        while (WiFi.status() != WL_CONNECTED) delay(500);
+        int cycles = 30;
+        while (WiFi.status() != WL_CONNECTED) {
+            delay(500);
+
+            if(cycles-- <= 0) ESP.restart();
+        }
     }
 }
 
@@ -279,7 +289,13 @@ void connect_mqtt() {
         Sprintf("connect_mqtt: connecting to %s:%d", MQTT_SERVER, MQTT_PORT)
     );
 
-    while(!mqtt.connect(HOST_NAME)) delay(500);
+    int cycles = 30;
+
+    while(!mqtt.connect(HOST_NAME)) {
+        delay(500);
+
+        if(cycles-- <= 0) ESP.restart();
+    }
 
     mqtt.subscribe("/control/reboot/" ROOM_NAME "/" HOST_NAME);
     mqtt.subscribe("/sensor/temperature");
