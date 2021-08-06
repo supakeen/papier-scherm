@@ -209,6 +209,7 @@ void loop_wifi() {
         WiFi.reconnect();
 
         int cycles = 30;
+
         while (WiFi.status() != WL_CONNECTED) {
             delay(500);
 
