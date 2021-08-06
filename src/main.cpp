@@ -130,7 +130,7 @@ void say_hello() {
         "/debug/hello/%s/%s",
         ROOM_NAME,
         FIRMWARE_NAME
-    )
+    );
 
     String payload = Sprintf(
         "room=%s firmware=%s,ip=%s,hostname=%s,mac=%s",
@@ -150,7 +150,7 @@ void say_hello() {
 
 /* Say ping to our MQTT server. */
 void say_ping() {
-    String topic = Sprintf(,
+    String topic = Sprintf(
         "/debug/ping/%s/%s",
         ROOM_NAME,
         FIRMWARE_NAME
