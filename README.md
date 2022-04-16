@@ -24,3 +24,7 @@ have PlatformIO installed and ready to use.
 pio run -e test-serial -t upload
 pio device monitor
 ```
+
+## Example
+
+![Example](https://raw.githubusercontent.com/supakeen/papier-scherm/master/example.jpg)
