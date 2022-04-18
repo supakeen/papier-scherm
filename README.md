@@ -28,3 +28,8 @@ pio device monitor
 ## Example
 
 ![Example](https://raw.githubusercontent.com/supakeen/papier-scherm/master/example.jpg)
+
+## Name
+
+The words *papier* and *scherm* mean *paper* and *screen* in Dutch. I know, not
+a very groundbreaking name.
