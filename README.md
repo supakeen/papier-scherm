@@ -10,7 +10,8 @@ The `papier-scherm` firmware is meant for the LilyGo T-5 Epaper 2.13" ESP32 modu
 
 ### Software
 
-- An MQTT server to connect to.
+- An MQTT server to connect to, all messages are expected to be in InfluxDBs
+  "LineFormat".
 
 ## Installation
 
