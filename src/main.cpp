@@ -383,5 +383,5 @@ void loop() {
     // annoying flashing animation and we don't want to redraw too often until
     // partial redraws are implemented.
     every(300 * 1000) draw_state();
-    every(5 * 1000) say_ping();
+    every(5 * 1000)   say_ping();
 }
